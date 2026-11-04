@@ -19,32 +19,45 @@ export default function App() {
 
   const currentChallenge = CHALLENGES[currentChallengeIndex];
 
-  // Start training
+  // Start / Resume training
   const handleStart = () => {
-    // If user has already finished all, restart; otherwise resume at first incomplete
     if (history.length >= CHALLENGES.length) {
+      // Completed all: restart from first
       setCurrentChallengeIndex(0);
       setHistory([]);
       setStreak(0);
+      setXp(0);
+    } else if (history.length > 0) {
+      // Resume at first incomplete challenge
+      setCurrentChallengeIndex(history.length);
+    } else {
+      setCurrentChallengeIndex(0);
     }
     setInspectedClues([]);
     setCurrentScreen('challenge');
   };
 
-  // Inspect clue in challenge
+  // Jump directly to a chosen scenario
+  const handleSelectChallenge = (index) => {
+    if (index >= 0 && index < CHALLENGES.length) {
+      setCurrentChallengeIndex(index);
+      setInspectedClues([]);
+      setCurrentScreen('challenge');
+    }
+  };
+
+  // Mark clue inspected in the current challenge
   const handleClueInspected = (clueId) => {
     if (!inspectedClues.includes(clueId)) {
       setInspectedClues(prev => [...prev, clueId]);
-      // Award small bonus for active clue investigation
-      setXp(prev => prev + 10);
     }
   };
 
   // User submits Genuine or Suspicious decision
   const handleSelectOption = (selection) => {
     const isCorrect = selection === currentChallenge.type;
-    const baseScore = isCorrect ? 100 : 25; // 100 for correct, 25 consolation learning points
-    const clueBonus = inspectedClues.length * 5;
+    const baseScore = isCorrect ? 100 : 25; // 100 for correct, 25 consolation points for learning effort
+    const clueBonus = inspectedClues.length * 10; // +10 XP per unique clue investigated
     const totalEarned = baseScore + clueBonus;
 
     setXp(prev => prev + totalEarned);
@@ -60,11 +73,14 @@ export default function App() {
       userSelection: selection,
       isCorrect,
       earnedXp: totalEarned,
+      baseScore,
+      clueBonus,
+      inspectedCluesCount: inspectedClues.length,
       timestamp: new Date().toISOString()
     };
 
     setHistory(prev => {
-      // Replace existing entry if redoing or append
+      // Replace existing entry if replaying or append
       const filtered = prev.filter(h => h.challengeId !== currentChallenge.id);
       return [...filtered, newRecord];
     });
@@ -72,7 +88,10 @@ export default function App() {
     setLastFeedback({
       userSelection: selection,
       isCorrect,
-      earnedXp: totalEarned
+      earnedXp: totalEarned,
+      baseScore,
+      clueBonus,
+      inspectedCluesCount: inspectedClues.length
     });
 
     setCurrentScreen('feedback');
@@ -100,7 +119,7 @@ export default function App() {
     setCurrentScreen('challenge');
   };
 
-  // Return to welcome dashboard without losing progress
+  // Return to welcome dashboard without losing session progress
   const handleReturnToDashboard = () => {
     setCurrentScreen('welcome');
   };
@@ -128,6 +147,7 @@ export default function App() {
             challenges={CHALLENGES}
             history={history}
             onStart={handleStart}
+            onSelectChallenge={handleSelectChallenge}
             onOpenHelp={() => setIsHelpOpen(true)}
           />
         )}
@@ -146,9 +166,14 @@ export default function App() {
         {currentScreen === 'feedback' && currentChallenge && lastFeedback && (
           <AnswerFeedback
             challenge={currentChallenge}
+            challengeIndex={currentChallengeIndex}
+            totalChallenges={CHALLENGES.length}
             userSelection={lastFeedback.userSelection}
             isCorrect={lastFeedback.isCorrect}
             earnedXp={lastFeedback.earnedXp}
+            baseScore={lastFeedback.baseScore}
+            clueBonus={lastFeedback.clueBonus}
+            inspectedCluesCount={lastFeedback.inspectedCluesCount}
             onContinue={handleContinue}
             isLastChallenge={currentChallengeIndex === CHALLENGES.length - 1}
           />
@@ -160,6 +185,7 @@ export default function App() {
             history={history}
             challenges={CHALLENGES}
             onRestart={handleRestart}
+            onReplayScenario={handleSelectChallenge}
           />
         )}
       </main>

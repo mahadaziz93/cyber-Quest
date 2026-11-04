@@ -28,16 +28,34 @@ export default function EmailChallenge({
   const { email, clues, learningObjective, category } = challenge;
 
   const handleClueClick = (clue) => {
-    setActiveClueDetail(clue);
+    setActiveClueDetail(prev => prev?.id === clue.id ? null : clue);
     onClueInspected(clue.id);
   };
 
   const handleLinkHover = (state) => {
     setShowLinkPreview(state);
-    // Also mark link clue inspected if available
-    const linkClue = clues.find(c => c.id.includes('link'));
+    // Mark link clue inspected across all scenarios
+    const linkClue = clues.find(c => 
+      c.id.includes('link') || 
+      c.id.includes('url') || 
+      c.id.includes('handshake') ||
+      c.id.includes('gift-cards')
+    );
     if (linkClue) {
       onClueInspected(linkClue.id);
+    }
+  };
+
+  const handleSenderClick = () => {
+    // Find sender clue across all scenarios (sender, domain, gmail, From:)
+    const senderClue = clues.find(c => 
+      c.location?.toLowerCase().includes('from:') || 
+      c.id.includes('sender') || 
+      c.id.includes('domain') || 
+      c.id.includes('gmail')
+    );
+    if (senderClue) {
+      handleClueClick(senderClue);
     }
   };
 
@@ -64,23 +82,24 @@ export default function EmailChallenge({
         </div>
 
         {/* Interactive Clue Finder Counter */}
-        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 shrink-0">
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 shrink-0 self-start md:self-auto">
           <div className="text-right">
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 justify-end">
               <Eye className="w-3.5 h-3.5 text-blue-600" />
-              <span>Clues Inspected</span>
+              <span>Clues Found</span>
             </div>
             <div className="text-sm font-extrabold text-slate-800">
-              {inspectedClues.length} / {clues.length} Found
+              {inspectedClues.length} / {clues.length}
             </div>
           </div>
           <button
             onClick={() => setShowHint(!showHint)}
-            className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-100/70 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1"
+            className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-100/70 hover:bg-blue-100 focus:ring-2 focus:ring-blue-500 rounded-lg transition-colors flex items-center gap-1 outline-none"
             title="Toggle Clue Hints"
+            aria-label="Toggle Clue Hints"
           >
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>{showHint ? "Hide Hints" : "Need Clue?"}</span>
+            <span>{showHint ? "Hide Hint" : "Need Hint?"}</span>
           </button>
         </div>
       </div>
@@ -91,8 +110,8 @@ export default function EmailChallenge({
           <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold">Investigator Tip for this email:</p>
-            <p className="text-amber-800">
-              Check the exact domain in the <strong>"From:"</strong> address (after the @ symbol). Hover your cursor over the verification link to inspect its destination before deciding!
+            <p className="text-amber-800 leading-relaxed">
+              Check the exact domain in the <strong>"From:"</strong> address (after the @ symbol). Hover your cursor or tap the verification link to inspect its true destination before deciding!
             </p>
           </div>
         </div>
@@ -129,7 +148,7 @@ export default function EmailChallenge({
                 <strong>External Sender Warning:</strong> This message originated from outside the university server network.
               </span>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded">
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded shrink-0 ml-2">
               External Gateway
             </span>
           </div>
@@ -161,12 +180,10 @@ export default function EmailChallenge({
                   
                   {/* Clickable Sender Inspector Clue */}
                   <button
-                    onClick={() => {
-                      const clue = clues.find(c => c.id.includes('sender') || c.id.includes('gmail'));
-                      if (clue) handleClueClick(clue);
-                    }}
-                    className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-md bg-white border border-slate-300 text-slate-700 hover:border-blue-500 hover:text-blue-600 transition-colors shadow-2xs group"
+                    onClick={handleSenderClick}
+                    className="inline-flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded-md bg-white border border-slate-300 text-slate-700 hover:border-blue-500 hover:text-blue-600 focus:ring-2 focus:ring-blue-500 transition-colors shadow-2xs group outline-none"
                     title="Click to inspect sender address"
+                    aria-label="Inspect sender address"
                   >
                     <span>&lt;{email.senderEmail}&gt;</span>
                     <Eye className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
@@ -183,7 +200,7 @@ export default function EmailChallenge({
             {/* Clue Inspector Mini Button */}
             <div className="flex items-center gap-2 self-start sm:self-center">
               <span className="text-[11px] text-slate-400 italic hidden lg:inline">
-                Click headers to examine clues
+                Click sender address or clue badges to examine evidence
               </span>
             </div>
           </div>
@@ -209,35 +226,33 @@ export default function EmailChallenge({
           {email.body.callToAction && (
             <div className="py-4">
               <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <span>Simulated Action Link</span>
                   <span className="text-[11px] font-normal text-blue-600">
-                    Hover or tap to reveal actual destination
+                    Hover or tap below to reveal true destination
                   </span>
                 </div>
 
                 <div className="relative inline-block w-full sm:w-auto">
-                  <a
-                    href="#preview"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLinkHover(!showLinkPreview);
-                    }}
+                  <button
+                    type="button"
+                    onClick={() => handleLinkHover(!showLinkPreview)}
                     onMouseEnter={() => handleLinkHover(true)}
                     onMouseLeave={() => handleLinkHover(false)}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-all active:scale-95 w-full sm:w-auto text-center"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 shadow-md transition-all active:scale-95 w-full sm:w-auto text-center outline-none"
+                    aria-label={`Inspect link: ${email.body.callToAction.label}`}
                   >
                     <span>{email.body.callToAction.label}</span>
                     <ExternalLink className="w-4 h-4" />
-                  </a>
+                  </button>
 
                   {/* High Tech Hover / Inspection Tooltip */}
                   {showLinkPreview && (
-                    <div className="absolute left-0 bottom-full mb-3 z-30 w-80 sm:w-96 p-4 rounded-xl bg-slate-950 text-white shadow-2xl border border-slate-700 text-xs animate-fadeIn">
+                    <div className="absolute left-0 bottom-full mb-3 z-30 max-w-[calc(100vw-2.5rem)] sm:max-w-md w-80 sm:w-96 p-4 rounded-xl bg-slate-950 text-white shadow-2xl border border-slate-700 text-xs animate-fadeIn">
                       <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
                         <span className="font-bold text-blue-400 flex items-center gap-1">
                           <Eye className="w-3.5 h-3.5" />
-                          Link Inspector
+                          Link Destination Inspector
                         </span>
                         <span className="text-[10px] text-slate-400">Browser Status Bar</span>
                       </div>
@@ -248,7 +263,7 @@ export default function EmailChallenge({
                           <span className="text-slate-300 break-all">{email.body.callToAction.displayText}</span>
                         </div>
                         <div className="pt-1 border-t border-slate-800">
-                          <span className="text-slate-400 block text-[10px] font-sans">Actual Link Destination:</span>
+                          <span className="text-slate-400 block text-[10px] font-sans">Actual Target URL:</span>
                           <span className={`break-all font-bold ${
                             email.body.callToAction.actualUrl.includes('phishing') || email.body.callToAction.actualUrl.includes('.xyz') || email.body.callToAction.actualUrl.includes('gmail')
                               ? 'text-rose-400'
@@ -286,7 +301,7 @@ export default function EmailChallenge({
 
         {/* Clue Inspector Pop-Up Bar if user clicked a clue */}
         {activeClueDetail && (
-          <div className="bg-blue-50/80 border-t border-blue-200/80 p-4 px-6 flex items-start justify-between gap-4 animate-fadeIn">
+          <div className="bg-blue-50/90 border-t border-blue-200 p-4 px-6 flex items-start justify-between gap-4 animate-fadeIn">
             <div className="flex items-start gap-3">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 activeClueDetail.isRedFlag ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
@@ -307,7 +322,7 @@ export default function EmailChallenge({
             </div>
             <button
               onClick={() => setActiveClueDetail(null)}
-              className="text-xs text-slate-400 hover:text-slate-600 font-bold px-2 py-1 rounded"
+              className="text-xs text-slate-500 hover:text-slate-800 font-bold px-2 py-1 rounded hover:bg-blue-100/60 transition-colors"
             >
               Close
             </button>
@@ -319,23 +334,26 @@ export default function EmailChallenge({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Click clues to inspect evidence (+bonus XP):
+              Click clues to inspect evidence (+10 bonus XP each):
             </span>
             <div className="flex flex-wrap gap-2">
               {clues.map((clue) => {
                 const isInspected = inspectedClues.includes(clue.id);
+                const isSelected = activeClueDetail?.id === clue.id;
                 return (
                   <button
                     key={clue.id}
                     onClick={() => handleClueClick(clue)}
-                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 ${
-                      isInspected 
+                    className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-all flex items-center gap-1.5 outline-none focus:ring-2 focus:ring-blue-500 ${
+                      isSelected
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : isInspected 
                         ? 'bg-blue-50 border-blue-300 text-blue-800 shadow-2xs' 
                         : 'bg-white border-slate-300 text-slate-700 hover:border-blue-400'
                     }`}
                   >
                     {isInspected ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                      <CheckCircle2 className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-blue-600'}`} />
                     ) : (
                       <Search className="w-3 h-3 text-slate-400" />
                     )}
@@ -367,7 +385,8 @@ export default function EmailChallenge({
           {/* Genuine Option */}
           <button
             onClick={() => onSelectOption('genuine')}
-            className="group relative flex items-center p-5 rounded-2xl bg-white border-2 border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-50/40 active:scale-[0.98] transition-all shadow-md hover:shadow-emerald-500/10 text-left"
+            className="group relative flex items-center p-5 rounded-2xl bg-white border-2 border-emerald-500/30 hover:border-emerald-500 hover:bg-emerald-50/40 focus:ring-2 focus:ring-emerald-500 focus:outline-none active:scale-[0.98] transition-all shadow-md hover:shadow-emerald-500/10 text-left"
+            aria-label="Mark email as Genuine"
           >
             <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mr-4 group-hover:scale-105 transition-transform">
               <ShieldCheck className="w-7 h-7" />
@@ -388,7 +407,8 @@ export default function EmailChallenge({
           {/* Suspicious Option */}
           <button
             onClick={() => onSelectOption('suspicious')}
-            className="group relative flex items-center p-5 rounded-2xl bg-white border-2 border-rose-500/30 hover:border-rose-500 hover:bg-rose-50/40 active:scale-[0.98] transition-all shadow-md hover:shadow-rose-500/10 text-left"
+            className="group relative flex items-center p-5 rounded-2xl bg-white border-2 border-rose-500/30 hover:border-rose-500 hover:bg-rose-50/40 focus:ring-2 focus:ring-rose-500 focus:outline-none active:scale-[0.98] transition-all shadow-md hover:shadow-rose-500/10 text-left"
+            aria-label="Mark email as Suspicious"
           >
             <div className="w-12 h-12 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mr-4 group-hover:scale-105 transition-transform">
               <AlertTriangle className="w-7 h-7" />

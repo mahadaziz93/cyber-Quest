@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   XCircle, 
   BookOpen, 
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 import { BADGE_TIERS } from '../data/challenges';
 
@@ -15,7 +16,8 @@ export default function ResultsDashboard({
   xp, 
   history, 
   challenges, 
-  onRestart 
+  onRestart,
+  onReplayScenario 
 }) {
   const totalQuestions = challenges.length;
   const correctCount = history.filter(h => h.isCorrect).length;
@@ -170,7 +172,7 @@ export default function ResultsDashboard({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-center">
+                  <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
                     <span className="text-xs text-slate-500">
                       Your choice: <strong className="capitalize text-slate-800">{userPick || "—"}</strong>
                     </span>
@@ -179,6 +181,16 @@ export default function ResultsDashboard({
                     }`}>
                       Actual: {isPhishing ? "Suspicious" : "Genuine"}
                     </span>
+                    {onReplayScenario && (
+                      <button
+                        onClick={() => onReplayScenario(index)}
+                        className="text-xs font-medium text-blue-600 hover:text-blue-800 bg-white border border-slate-300 hover:border-blue-400 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 ml-1"
+                        title="Re-examine this email"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span>Inspect</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -240,7 +252,7 @@ export default function ResultsDashboard({
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
         <button
           onClick={onRestart}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-base font-bold text-white bg-blue-600 hover:bg-blue-500 active:scale-[0.98] shadow-lg shadow-blue-600/30 transition-all group"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl text-base font-bold text-white bg-blue-600 hover:bg-blue-500 active:scale-[0.98] shadow-lg shadow-blue-600/30 transition-all group outline-none focus:ring-2 focus:ring-blue-500"
         >
           <RotateCcw className="w-5 h-5 group-hover:-rotate-90 transition-transform duration-300" />
           <span>Restart Challenge (Try for 100%)</span>

@@ -20,7 +20,8 @@ export default function HowToPlayModal({ isOpen, onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Close guide"
           >
             <X className="w-5 h-5" />
           </button>
@@ -47,7 +48,7 @@ export default function HowToPlayModal({ isOpen, onClose }) {
             <div>
               <h4 className="font-bold text-slate-900 mb-0.5">Click Clues & Hover Links (+XP Bonus)</h4>
               <p className="text-xs leading-relaxed">
-                Click on the interactive clue badges in the email or hover over the fictional action links to preview where they truly lead. Inspecting clues gives you bonus investigator XP!
+                Click on the interactive clue badges in the email or hover over the fictional action links to preview where they truly lead. Inspecting clues gives you +10 XP bonus each!
               </p>
             </div>
           </div>
@@ -78,12 +79,13 @@ export default function HowToPlayModal({ isOpen, onClose }) {
 
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
             <h5 className="font-semibold text-slate-900 text-xs mb-1 flex items-center gap-1.5">
-              💡 Scoring System:
+              💡 Transparent Scoring System:
             </h5>
-            <ul className="text-xs space-y-1 text-slate-600 list-disc list-inside">
+            <ul className="text-xs space-y-1.5 text-slate-600 list-disc list-inside">
               <li><strong className="text-slate-800">+100 XP</strong> for every correct decision</li>
-              <li><strong className="text-slate-800">+25 XP</strong> for inspecting red flag clues before answering</li>
-              <li><strong className="text-slate-800">Streak bonus</strong> multiplies your defense achievements</li>
+              <li><strong className="text-slate-800">+10 XP</strong> bonus for each clue investigated before submitting</li>
+              <li><strong className="text-slate-800">+25 XP</strong> educational effort points for missed attempts</li>
+              <li><strong className="text-slate-800">Streak counter</strong> tracks your consecutive defense successes</li>
             </ul>
           </div>
         </div>
@@ -92,7 +94,7 @@ export default function HowToPlayModal({ isOpen, onClose }) {
         <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm"
+            className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm outline-none focus:ring-2 focus:ring-blue-500"
           >
             Got it, Let's Play!
           </button>

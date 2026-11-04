@@ -9,7 +9,8 @@ import {
   Mail, 
   Lock, 
   BookOpen, 
-  TrendingUp
+  TrendingUp,
+  Play
 } from 'lucide-react';
 
 export default function WelcomeDashboard({ 
@@ -18,6 +19,7 @@ export default function WelcomeDashboard({
   totalChallenges, 
   challenges, 
   onStart, 
+  onSelectChallenge,
   onOpenHelp, 
   history 
 }) {
@@ -52,15 +54,15 @@ export default function WelcomeDashboard({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
             <button
               onClick={onStart}
-              className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl text-base font-bold text-white bg-blue-600 hover:bg-blue-500 active:scale-[0.98] shadow-lg shadow-blue-600/30 transition-all group"
+              className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl text-base font-bold text-white bg-blue-600 hover:bg-blue-500 focus:ring-2 focus:ring-blue-400 active:scale-[0.98] shadow-lg shadow-blue-600/30 transition-all group outline-none"
             >
-              <span>{completedCount > 0 ? "Resume Training" : "Start Your First Challenge"}</span>
+              <span>{completedCount > 0 && completedCount < totalChallenges ? "Resume Training" : completedCount === totalChallenges ? "Retake All Challenges" : "Start Your First Challenge"}</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
 
             <button
               onClick={onOpenHelp}
-              className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white border border-slate-700/80 transition-all"
+              className="inline-flex items-center justify-center gap-2 px-6 py-4 rounded-xl text-base font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white border border-slate-700/80 transition-all outline-none focus:ring-2 focus:ring-blue-500"
             >
               <BookOpen className="w-5 h-5 text-slate-400" />
               <span>How It Works</span>
@@ -85,7 +87,7 @@ export default function WelcomeDashboard({
             <span className="text-2xl sm:text-3xl font-extrabold text-slate-900">{xp}</span>
             <span className="text-xs font-bold text-amber-600">XP</span>
           </div>
-          <p className="text-xs text-slate-500 mt-1">Earn +100 XP per correct decision</p>
+          <p className="text-xs text-slate-500 mt-1">100 XP per correct + clue bonuses</p>
         </div>
 
         {/* Progress Tracker */}
@@ -125,7 +127,9 @@ export default function WelcomeDashboard({
           <div className="text-xl sm:text-2xl font-extrabold text-slate-900 truncate">
             {completedCount === 0 ? "Cyber Cadet" : completedCount === totalChallenges ? "Sentinel" : "Investigator"}
           </div>
-          <p className="text-xs text-slate-500 mt-1">Level 1 Security Awareness</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {completedCount === totalChallenges ? "Challenge Completed" : `Scenario ${completedCount + 1} Ready`}
+          </p>
         </div>
 
         {/* Accuracy */}
@@ -149,7 +153,7 @@ export default function WelcomeDashboard({
         </div>
       </section>
 
-      {/* Curriculum / Scenario Preview Grid */}
+      {/* Curriculum / Scenario Preview Grid (Interactive) */}
       <section className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-5">
           <div>
@@ -157,7 +161,7 @@ export default function WelcomeDashboard({
               Interactive Training Scenarios
             </h2>
             <p className="text-sm text-slate-500 mt-0.5">
-              Practice across {totalChallenges} diverse university situations featuring genuine notices and modern phishing techniques.
+              Click any scenario below to start or replay that challenge directly.
             </p>
           </div>
           <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full w-fit">
@@ -173,10 +177,11 @@ export default function WelcomeDashboard({
             return (
               <div 
                 key={challenge.id}
-                className={`relative rounded-2xl p-5 border transition-all ${
+                onClick={() => onSelectChallenge && onSelectChallenge(index)}
+                className={`relative rounded-2xl p-5 border transition-all cursor-pointer group text-left ${
                   isCompleted 
-                    ? "bg-slate-50/70 border-slate-200" 
-                    : "bg-white border-slate-200/80 hover:border-blue-400 hover:shadow-md"
+                    ? "bg-slate-50/70 border-slate-200 hover:border-blue-400 hover:bg-white" 
+                    : "bg-white border-slate-200/80 hover:border-blue-500 hover:shadow-md"
                 }`}
               >
                 {/* Status indicator badge */}
@@ -194,11 +199,14 @@ export default function WelcomeDashboard({
                       {userHistory?.isCorrect ? "Mastered" : "Reviewed"}
                     </span>
                   ) : (
-                    <span className="text-xs font-medium text-slate-400">Ready</span>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 group-hover:translate-x-0.5 transition-transform">
+                      <Play className="w-3 h-3 fill-blue-600" />
+                      <span>Start</span>
+                    </span>
                   )}
                 </div>
 
-                <h3 className="font-bold text-slate-900 text-base mb-1.5 line-clamp-1">
+                <h3 className="font-bold text-slate-900 text-base mb-1.5 line-clamp-1 group-hover:text-blue-600 transition-colors">
                   {challenge.title}
                 </h3>
 
